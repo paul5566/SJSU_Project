@@ -11,12 +11,13 @@
 #define WIFI_IF "wlx4c0fc716fbaf"
 #define WIFI(st) system("echo "st" > /sys/class/edm/gpio/USB_OTG2/value")
 
-#define station_txt "/etc/wificonfig/station_ssid_pwd.txt"
+#define station_txt "./station_ssid_pwd.txt"
 #define ap_n_txt "./n_ssid_pwd.txt" 
 #define ap_g_txt  "./g_ssid_pwd.txt"
 
 
 
+char *array[] = {station_txt,ap_n_txt, ap_g_txt};
 
 
 static void setup_ssid_pwd(int variable)
@@ -46,23 +47,31 @@ static void setup_ssid_pwd(int variable)
 		char *array[] = {station_txt,ap_n_txt, ap_g_txt};
 		fp = fopen(station_txt,"w+");
 	*/
+
+	fp = fopen(*(array+variable), "w+");
+	fwrite(buffer_ssid , 1, ssid_length, fp);
+	fwrite(buffer_pwd, 1, pwd_length, fp);
+	fclose(fp);//be careful 
+	
+	/*
+
 	switch (variable)   {
 		case 1:
-			/*write to the station.txt*/
-			fp = fopen(, "w+");
+			//write to the station.txt
+			fp = fopen(station_txt, "w+");
 			fwrite(buffer_ssid , 1, ssid_length, fp);
 			fwrite(buffer_pwd, 1, pwd_length, fp);
 			fclose(fp);//be careful 
 			break;
 		case 2:
-			/*write to the n_mode.txt*/	
+			//write to the n_mode.txt
 			fp = fopen(ap_n_txt, "w+");
 			fwrite(buffer_ssid , 1, ssid_length, fp);
 			fwrite(buffer_pwd, 1, pwd_length, fp);
 			fclose(fp);
 			break;
 		case 3:
-			/*write to the g_mode.txt*/
+			//write to the g_mode.txt
 			fp = fopen(ap_g_txt, "w+");
 			fwrite(buffer_ssid , 1, ssid_length, fp);
 			fwrite(buffer_pwd, 1, pwd_length, fp);
@@ -72,7 +81,10 @@ static void setup_ssid_pwd(int variable)
 			printf("The option is not available\n");
 			break;
 	}
+	*/
 }
+
+
 /*
 
 Target: store the account and password to the buffer
@@ -137,12 +149,27 @@ static int fillin_ssid_pwd(char *ssid,char *pwd,int a)
 	memcpy(pwd, &buf[pos+1],sizeof(pwd)/sizeof(pwd[0]) - count);
 	return 0;
 }
+static void station_ssid_pwd(void)
+{
+	char cmd[256] = {0};
+	char ssid[64] = {0};
+	char pwd[64] = {0};
+
+	fillin_ssid_pwd(ssid, pwd, 1);
+	ssid[strlen(ssid) - 1] = '\0';//don't fotget to make the array last element clean
+	pwd[strlen(pwd) - 1] = '\0';//don't forget to make the arary last element clean
+	//printf("%s(%d): ssid: %s, pwd: %s\n", __func__, __LINE__, ssid, pwd);
+	snprintf(cmd, sizeof(cmd), 
+			"wpa_passphrase %s %s ./wifi_home.conf",
+			ssid, pwd);
+	system(cmd);
+}
 
 int main(void)
 {
 	char *array[] = {station_txt,ap_n_txt, ap_g_txt};
-	fp = fopen(station_txt,"w+");
-
+	setup_ssid_pwd(1);
+	station_ssid_pwd();
 	char buffer[128];
 	printf("enter the input\n");
 	scanf("%s",buffer);

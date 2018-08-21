@@ -20,6 +20,7 @@
 #define ap_g_txt  "/etc/wificonfig/g_ssid_pwd.txt"
 #define parser_log "/var/log/kern.log" 
 
+char *txt_array[] = {station_txt, ap_n_txt, ap_g_txt};
 
 /*
  	Target: turn off the station mode and set to 0
@@ -101,9 +102,11 @@ static void setup_ssid_pwd(int variable)
 	size_t pwd_length = strlen(buffer_pwd);
 
 	/*
-
-		char *array[] = {station_txt,ap_n_txt, ap_g_txt};
-		fp = fopen(station_txt,"w+");
+	Use the array to instaed of the switch(variable)
+		fp = fopen(*(txt_array+variable), "w+");
+		fwrite(buffer_ssid , 1, ssid_length, fp);
+		fwrite(buffer_pwd, 1, pwd_length, fp);
+		fclose(fp);//be careful  
 	*/
 	switch (variable)   {
 		case 1:
