@@ -3,8 +3,6 @@
  *	This software may be distributed under the terms of the BSD license.
  */
 
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -225,33 +223,37 @@ static void station_ssid_pwd(void)
 	system(cmd);
 }
 
+/*
+	avoid using a lot of printf function to solve the bug printf and flush
+
+	website link: goo.gl/xf2WyM
+*/
 static void help(void)
 {
-	printf("Panzar Wi-Fi Feature v1.0\n");
-	printf("\tCopyright (c) 2018, Polin Chen <mayqueen@gmail.com> and contributors\n");
-	printf("This software may be distributed under the terms of the BSD license.\n");
-	printf("See README for more details.\n");
-	printf("\nusage:\n");
-	printf("\tpanzar_wifi [-s] [-sta]/[-ap_n]/[-ap_g]\
+	printf("Panzar Wi-Fi Feature v1.0\n"
+	       "\tCopyright (c) 2018, Polin Chen <mayqueen@gmail.com> and contributors\n"
+	       "This software may be distributed under the terms of the BSD license.\n"
+	       "See README for more details.\n"
+	       "\nusage:\n"
+	       "\tpanzar_wifi [-s] [-sta]/[-ap_n]/[-ap_g]\
 			[-c] [-sta]/[-ap_n]/[-ap_g]\
-			[-k] \n");
-	printf("\ndrivers:\n");
-	printf("\trtl871xdrv,rtl8188eu\n");
-	printf("\noptions:\n");
-	printf("\tpanzar_wifi -s -- setup account ans password\n");
-	printf("\tpanzar_wifi -c -- wifi connect \n");
-	printf("\tpanzar_wifi -k -- kill all the process of wifi(AP/Station)\n");
-	printf("\tpanzar_wifi -h -- help\n");
-	printf("\nexample:\n");
-	printf("\t-s	-sta 	set up station mode of id and password\n");
-	printf("\t-s 	-ap_n 	set up 80211 n mode of id and password\n");
-	printf("\t-s 	-ap_g 	set up 80211 g mode of id and password\n");
-	printf("\t-c  	-sta 	connect to the station  mode\n");
-	printf("\t-c  	-ap_n 	excute the 80211 n of AP mode\n");
-	printf("\t-c  	-ap_g 	excue the 80211 g  of AP mode\n");
-	printf("\t-k 			kill all the  wifi prcoess\n");
+			[-k] \n"
+		   "\ndrivers:\n"
+		   "\trtl871xdrv,rtl8188eu\n"
+		   "\noptions:\n"
+	       "\tpanzar_wifi -s -- setup account ans password\n"
+	       "\tpanzar_wifi -c -- wifi connect \n"
+	       "\tpanzar_wifi -k -- kill all the process of wifi(AP/Station)\n"
+	       "\tpanzar_wifi -h -- help\n"
+	       "\nexample:\n"
+	       "\t-s	-sta 	set up station mode of id and password\n"
+	       "\t-s 	-ap_n 	set up 80211 n mode of id and password\n"
+	       "\t-s 	-ap_g 	set up 80211 g mode of id and password\n"
+	       "\t-c  	-sta 	connect to the station  mode\n"
+	       "\t-c  	-ap_n 	excute the 80211 n of AP mode\n"
+	       "\t-c  	-ap_g 	excue the 80211 g  of AP mode\n"
+	       "\t-k 			kill all the  wifi prcoess\n");
 }
-
 /*
 	(1)	"link becomes ready" first time
 		(o)	account is correct
