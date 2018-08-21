@@ -103,7 +103,8 @@ static void setup_ssid_pwd(int variable)
 	size_t pwd_length = strlen(buffer_pwd);
 
 	/*
-		char array [] = {station.txt, buffer_ssid.txt, pwd_length};
+
+		char *array[] = {station_txt,ap_n_txt, ap_g_txt};
 		fp = fopen(station_txt,"w+");
 	*/
 	switch (variable)   {
