@@ -20,6 +20,7 @@
 #define ap_g_txt  "/etc/wificonfig/g_ssid_pwd.txt"
 #define parser_log "/var/log/kern.log" 
 
+char *txt_array[] = {station_txt, ap_n_txt, ap_g_txt};
 
 /*
  	Target: turn off the station mode and set to 0
@@ -100,39 +101,12 @@ static void setup_ssid_pwd(int variable)
 	buffer_pwd[strlen(buffer_pwd) - 1] = '\n';// the stdin would create 
 	size_t pwd_length = strlen(buffer_pwd);
 
-	/*
-
-		char *array[] = {station_txt,ap_n_txt, ap_g_txt};
-		fp = fopen(station_txt,"w+");
-	*/
-	switch (variable)   {
-		case 1:
-			/*write to the station.txt*/
-			fp = fopen(station_txt, "w+");
-			fwrite(buffer_ssid , 1, ssid_length, fp);
-			fwrite(buffer_pwd, 1, pwd_length, fp);
-			fclose(fp);//be careful 
-			break;
-		case 2:
-			/*write to the n_mode.txt*/	
-			fp = fopen(ap_n_txt, "w+");
-			fwrite(buffer_ssid , 1, ssid_length, fp);
-			fwrite(buffer_pwd, 1, pwd_length, fp);
-			fclose(fp);
-			break;
-		case 3:
-			/*write to the g_mode.txt*/
-			fp = fopen(ap_g_txt, "w+");
-			fwrite(buffer_ssid , 1, ssid_length, fp);
-			fwrite(buffer_pwd, 1, pwd_length, fp);
-			fclose(fp);
-			break;
-		default:
-			printf("The option is not available\n");
-			break;
-	}
+	//	Use the array to instaed of the switch(variable)
+	fp = fopen(*(txt_array+variable), "w+");
+	fwrite(buffer_ssid , 1, ssid_length, fp);
+	fwrite(buffer_pwd, 1, pwd_length, fp);
+	fclose(fp);//be careful  
 }
-
 
 /*
 
@@ -491,15 +465,15 @@ int main(int argc, char **argv)
 		//printf("excute the ssid password set up\n");
 		if (strcmp(*(argv+2), "-sta") == 0){
 			printf("station ssid & password set up\n");
-			setup_ssid_pwd(1);
+			setup_ssid_pwd(0);
 		}
 		else if (strcmp(*(argv+2), "-ap_n") == 0){
 			printf("AP n mode ssid & password set up\n");
-			setup_ssid_pwd(2);
+			setup_ssid_pwd(1);
 		}
 		else if (strcmp(*(argv+2), "-ap_g") == 0){
 			printf("AP g mode ssid & password set up\n");
-			setup_ssid_pwd(3);
+			setup_ssid_pwd(2);
 		}
 		else {
 			printf("The second option is not available\n");
