@@ -1,0 +1,3 @@
+[154700.999421] r8188eu 2-1:1.0 wlx4c0fc716fbaf: renamed from wlan0
+[154702.324617] MAC Address = 4c:0f:c7:16:fb:af
+[154702.335988] IPv6: ADDRCONF(NETDEV_UP): wlx4c0fc716fbaf: link is not ready

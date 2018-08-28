@@ -18,6 +18,7 @@
 #define station_txt "/etc/wificonfig/station_ssid_pwd.txt"
 #define ap_n_txt "/etc/wificonfig/n_ssid_pwd.txt" 
 #define ap_g_txt  "/etc/wificonfig/g_ssid_pwd.txt"
+#define wifi_interface "/etc/wificonfig/wifimac.txt"
 #define parser_log "/var/log/kern.log" 
 
 char *txt_array[] = {station_txt, ap_n_txt, ap_g_txt};
@@ -35,26 +36,63 @@ char *txt_array[] = {station_txt, ap_n_txt, ap_g_txt};
 
 	Optimized Target
 
-	[X] Printf avoid the buffer
+	[o] Printf avoid the buffer
 
-	[X]	Be careful about the fclose have to be settled before the break
+	[o]	Be careful about the fclose have to be settled before the break
 
-	[X] Avoid some duplicated program e.g: in the main function kill station ,kill ap 
+	[o] Avoid some duplicated program e.g: in the main function kill station ,kill ap 
 
-	[X] assign the memory must have to be the base of 8
+	[o] assign the memory must have to be the base of 8
 
 	[X] computer concept (1)error return -1, (2)correct return 0
 
 	[X] set up #define 
 
-	[X] switch from [0],[1],[2]
+	[o] switch from [0],[1],[2]
 
-	[X] rename check_again, rename
+	[o] rename check_again, rename
 
-	[X] char array[] = { station.txt, ap_n.txt, ap_g.txt }; 
-
+	[o] char array[] = { station.txt, ap_n.txt, ap_g.txt }; 
+		
 	[X] The printf " *** keyword ***"
 */
+
+
+/*
+	trig on the wifi and parser the dmesg in the parser_log(/var/log/kern.log)
+
+	check the parser log "link is not ready" and the wlx(mac address)
+*/
+
+static void parser_wifimac(char *wifimac)  //check_again ,replace the parser_pwd
+{
+	/*turn on the wifi	*/
+	WIFI(ON);	
+	sleep(DELAY*4);
+	system("sudo sh -c ifconfig > /etc/wificonfig/wifimac.txt");
+	
+	/*parser the code*/
+	char buffer_wifimac[512] = {0};// be careful
+	FILE *fp_wifimac;
+	fp_wifimac = fopen("/etc/wificonfig/wifimac.txt","r+");
+	if(fp_wifimac == NULL){
+		perror("Error opening file");
+	}	
+	fseek(fp_wifimac, -512, SEEK_END );
+	fread(buffer_wifimac,512,1,fp_wifimac);
+	rewind(fp_wifimac);
+	//printf("%s\n",buffer_wifimac);
+	char *addr_check;
+
+	addr_check = strstr(buffer_wifimac,"wlx");//sta recv deauth reason code"
+	if (NULL == addr_check)
+	{
+		printf("the wifimac lost\n");
+	}
+	memcpy(wifimac, addr_check, 15);//1+14
+	printf("%s\n",wifimac);			
+	fclose(fp_wifimac);
+}
 
 static void kill_station(void)
 {
@@ -362,7 +400,7 @@ static void parser_check()
 /*
 	Target:excute the station connection
 */
-static void station(void)
+static void station(char *wifimac)
 {
 	WIFI(ON);
 	sleep(DELAY);
@@ -386,7 +424,7 @@ static void station(void)
 /*
  *  Target: excute the create_ap_g mode
  */
-static void create_ap_g(void)
+static void create_ap_g(char *wifimac)
 {
 	/*
 	 *
@@ -417,7 +455,7 @@ static void create_ap_g(void)
 /*
  *  Target: excute the create_ap_n mode
  */
-static void create_ap_n(void)
+static void create_ap_n(char *wifimac)
 {
 
 	/*
@@ -457,10 +495,15 @@ static void kill_ap(void)
 
 int main(int argc, char **argv)
 {
+	char mac_addrs[16] = {0};	
 	if(argc < 2){
 		printf("Usage: %s [-s/-c/-k/-h]\n", argv[0]);
 		return -1;
 	}
+		
+	/*parser the code*/
+	//parser_wifimac(mac_addrs);
+
 	if (strcmp(*(argv+1), "-s") == 0){
 		//printf("excute the ssid password set up\n");
 		if (strcmp(*(argv+2), "-sta") == 0){
@@ -483,21 +526,27 @@ int main(int argc, char **argv)
 		//printf("excute the connection\n");
 		if (strcmp(*(argv+2), "-sta") == 0){
 			printf("Excute the station mode connection \n");
+			parser_wifimac(mac_addrs);
 			kill_station();
 			kill_ap();
-			station();
+			printf("the wifi interface is %s\n",mac_addrs);
+			station(mac_addrs);
 		}
 		else if (strcmp(*(argv+2), "-ap_n") == 0){
 			printf("Excute the Wi-Fi AP 802.11n mode\n");
+			parser_wifimac(mac_addrs);
 			kill_station();
-			kill_ap();	
-			create_ap_n();	
+			kill_ap();
+			printf("the wifi interface is %s\n",mac_addrs);
+			create_ap_n(mac_addrs);	
 		}
 		else if (strcmp(*(argv+2), "-ap_g") == 0){
 			printf("Excute the Wi-Fi AP 802.11g mode\n");
+			parser_wifimac(mac_addrs);
 			kill_station();
 			kill_ap();
-			create_ap_g();
+			printf("the wifi interface is %s\n",mac_addrs);
+			create_ap_g(mac_addrs);
 		}
 		else {
 			printf("The second part of opt is not available\n");
