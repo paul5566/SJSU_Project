@@ -12,7 +12,6 @@
 #define OFF	"0"
 #define DELAY 0.5
 
-#define WIFI_IF "wlx4c0fc716fbaf"
 #define WIFI(st) system("echo "st" > /sys/class/edm/gpio/USB_OTG2/value")
 
 #define station_txt "/etc/wificonfig/station_ssid_pwd.txt"
@@ -70,7 +69,6 @@ static void parser_wifimac(char *wifimac)  //check_again ,replace the parser_pwd
 	WIFI(ON);	
 	sleep(DELAY*4);
 	system("sudo sh -c ifconfig > /etc/wificonfig/wifimac.txt");
-	
 	/*parser the code*/
 	char buffer_wifimac[512] = {0};// be careful
 	FILE *fp_wifimac;
@@ -87,10 +85,10 @@ static void parser_wifimac(char *wifimac)  //check_again ,replace the parser_pwd
 	addr_check = strstr(buffer_wifimac,"wlx");//sta recv deauth reason code"
 	if (NULL == addr_check)
 	{
-		printf("the wifimac lost\n");
+		printf("the wifimac is lost\n");
 	}
 	memcpy(wifimac, addr_check, 15);//1+14
-	printf("%s\n",wifimac);			
+	//printf("%s\n",wifimac);			
 	fclose(fp_wifimac);
 }
 
@@ -116,7 +114,7 @@ static void kill_station(void)
 	(c)fwrite to the conf
 */
 
-static void setup_ssid_pwd(int variable)
+static int setup_ssid_pwd(int variable)
 {
 	FILE *fp;
 	char buffer_ssid [32] = {0};
@@ -134,7 +132,9 @@ static void setup_ssid_pwd(int variable)
 	printf("enter thr passwpord\n");
 	fgets(buffer_pwd, sizeof(buffer_pwd), stdin);
 	if(strlen(buffer_pwd) < 8){
+		printf("\n");
 		printf("*** the length of password is not long enough ***\n");
+		return -1;
 	}
 	buffer_pwd[strlen(buffer_pwd) - 1] = '\n';// the stdin would create 
 	size_t pwd_length = strlen(buffer_pwd);
@@ -143,7 +143,8 @@ static void setup_ssid_pwd(int variable)
 	fp = fopen(*(txt_array+variable), "w+");
 	fwrite(buffer_ssid , 1, ssid_length, fp);
 	fwrite(buffer_pwd, 1, pwd_length, fp);
-	fclose(fp);//be careful  
+	fclose(fp);//be careful
+      	return 0;	
 }
 
 /*
@@ -243,7 +244,7 @@ static void station_ssid_pwd(void)
 static void help(void)
 {
 	printf("Panzar Wi-Fi Feature v1.0\n"
-	       "\tCopyright (c) 2018, Polin Chen <mayqueen@gmail.com> and contributors\n"
+	       "\tCopyright (c) 2018, Polin Chen <paul.chen@mayqueentech.com> and contributors\n"
 	       "This software may be distributed under the terms of the BSD license.\n"
 	       "See README for more details.\n"
 	       "\nusage:\n"
@@ -340,7 +341,7 @@ static int parser_account_check()
 	if (parsercheck != NULL){
 		int pwd_count = 0;
 		int pwd_check;
-		while(pwd_count < 5)
+		while(pwd_count < 3)
 		{
 			sleep(0.5);
 			pwd_check = check_again();
@@ -349,7 +350,7 @@ static int parser_account_check()
 				pwd_check = check_again();
 				if(pwd_check == 1)
 				{
-					printf("*** connection successful ***\n");
+					printf("\n\n\n*** connection successful ***\n\n");
 					return 1;
 					break;
 				}
@@ -359,9 +360,9 @@ static int parser_account_check()
 			}
 			sleep(DELAY*2);
 		}
-		if (pwd_count >= 4)
+		if (pwd_count >= 2)
 		{
-			printf("*** The wifi station connection failed, the password may be not correct ***\n");
+			printf("\n\n*** The wifi station connection failed, the password may be not correct ***\n\n\n");
 			kill_station();
 		}
 		return 1;		
@@ -377,7 +378,7 @@ static void parser_check()
 {
 	int find;
 	int count = 0;
-	while(count < 4)
+	while(count < 3)
 	{
 		find = parser_account_check();
 		if(1 == find){
@@ -386,11 +387,11 @@ static void parser_check()
 		else {
 			count++;
 		}
-		sleep(5);
+		sleep(2);
 	}
 	if (count >= 3){
 
-		printf("*** The wifi station connection failed, please check the account setting ***\n");
+		printf("\n\n\n*** The wifi station connection failed, please check the account setting ***\n\n\n");
 		kill_station();
 	}
 }
@@ -495,7 +496,9 @@ static void kill_ap(void)
 
 int main(int argc, char **argv)
 {
-	char mac_addrs[16] = {0};	
+	char mac_addrs[16] = {0};
+
+	int pwd_length_check;// 0 is true and -1 is true 	
 	if(argc < 2){
 		printf("Usage: %s [-s/-c/-k/-h]\n", argv[0]);
 		return -1;
@@ -503,20 +506,38 @@ int main(int argc, char **argv)
 		
 	/*parser the code*/
 	//parser_wifimac(mac_addrs);
-
+	
 	if (strcmp(*(argv+1), "-s") == 0){
 		//printf("excute the ssid password set up\n");
 		if (strcmp(*(argv+2), "-sta") == 0){
 			printf("station ssid & password set up\n");
-			setup_ssid_pwd(0);
+			pwd_length_check = setup_ssid_pwd(0);
+			while(pwd_length_check == -1)
+			{
+				printf("\n");
+				printf("***please enter the password and account again***\n");
+				pwd_length_check = setup_ssid_pwd(0);	
+			}
 		}
 		else if (strcmp(*(argv+2), "-ap_n") == 0){
 			printf("AP n mode ssid & password set up\n");
-			setup_ssid_pwd(1);
+			pwd_length_check = setup_ssid_pwd(1);
+			while(pwd_length_check == -1)
+			{
+				printf("\n");
+				printf("***please enter the password and account again***\n");
+				pwd_length_check = setup_ssid_pwd(1);	
+			}
 		}
 		else if (strcmp(*(argv+2), "-ap_g") == 0){
 			printf("AP g mode ssid & password set up\n");
-			setup_ssid_pwd(2);
+			pwd_length_check = setup_ssid_pwd(1);
+                        while(pwd_length_check == -1)
+                        {
+                                printf("\n");
+				printf("***please enter the password and account again***\n");
+				pwd_length_check = setup_ssid_pwd(1);   
+                        }
 		}
 		else {
 			printf("The second option is not available\n");
